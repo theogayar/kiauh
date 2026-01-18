@@ -24,16 +24,13 @@ from core.logger import Logger
 
 def check_file_exist(file_path: Path, sudo=False) -> bool:
     """
-    Helper function for checking the existence of a file.
-    Also works with symlinks (returns False if broken) |
+    Helper function for checking the existence of a file |
     :param file_path: the absolute path of the file to check
     :param sudo: use sudo if required
     :return: True, if file exists, otherwise False
     """
     if sudo:
-        # -L forces find to follow symlinks
-        # -maxdepth = 0 avoids loosing time if `file_path` is a directory
-        command = ["sudo", "find", "-L", file_path.as_posix(), "-maxdepth", "0"]
+        command = ["sudo", "find", file_path.as_posix()]
         try:
             check_output(command, stderr=DEVNULL)
             return True
