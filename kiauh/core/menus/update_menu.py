@@ -237,23 +237,33 @@ class UpdateMenu(BaseMenu):
     def upgrade_system_packages(self, **kwargs) -> None:
         self._run_system_updates()
 
-    def _fetch_update_status(self) -> None:
-        self._set_status_data("klipper", get_klipper_status)
-        self._set_status_data("moonraker", get_moonraker_status)
-        self._set_status_data("mainsail", get_client_status, self.mainsail_data, True)
-        self._set_status_data(
-            "mainsail_config", get_client_config_status, self.mainsail_data
-        )
-        self._set_status_data("fluidd", get_client_status, self.fluidd_data, True)
-        self._set_status_data(
-            "fluidd_config", get_client_config_status, self.fluidd_data
-        )
-        self._set_status_data("klipperscreen", get_klipperscreen_status)
-        self._set_status_data("crowsnest", get_crowsnest_status)
+    def _fetch_update_status(self, component_name: str | None = None) -> None:
+        """Fetch and update status data for component(s). If component_name is None, fetch all."""
+        if component_name is None or component_name == "klipper":
+            self._set_status_data("klipper", get_klipper_status)
+        if component_name is None or component_name == "moonraker":
+            self._set_status_data("moonraker", get_moonraker_status)
+        if component_name is None or component_name == "mainsail":
+            self._set_status_data("mainsail", get_client_status, self.mainsail_data, True)
+        if component_name is None or component_name == "mainsail_config":
+            self._set_status_data(
+                "mainsail_config", get_client_config_status, self.mainsail_data
+            )
+        if component_name is None or component_name == "fluidd":
+            self._set_status_data("fluidd", get_client_status, self.fluidd_data, True)
+        if component_name is None or component_name == "fluidd_config":
+            self._set_status_data(
+                "fluidd_config", get_client_config_status, self.fluidd_data
+            )
+        if component_name is None or component_name == "klipperscreen":
+            self._set_status_data("klipperscreen", get_klipperscreen_status)
+        if component_name is None or component_name == "crowsnest":
+            self._set_status_data("crowsnest", get_crowsnest_status)
 
-        update_system_package_lists(silent=True)
-        self.packages = get_upgradable_packages()
-        self.package_count = len(self.packages)
+        if component_name is None:
+            update_system_package_lists(silent=True)
+            self.packages = get_upgradable_packages()
+            self.package_count = len(self.packages)
 
     def _format_local_status(self, local_version, remote_version) -> str:
         color = Color.RED
@@ -305,6 +315,7 @@ class UpdateMenu(BaseMenu):
             return
 
         update_fn(*args)
+        self._fetch_update_status(component_name=name)
 
     def _run_system_updates(self) -> None:
         if not self.packages:
