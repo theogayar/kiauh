@@ -6,20 +6,33 @@
 #                                                                         #
 #  This file may be distributed under the terms of the GNU GPLv3 license  #
 # ======================================================================= #
+import shutil
+from datetime import datetime
+from typing import List
+
 from components.klipper.klipper import Klipper
+from components.moonraker.moonraker import Moonraker
 from core.instance_manager.instance_manager import InstanceManager
 from core.logger import DialogType, Logger
+from core.services.backup_service import BackupService
+from core.submodules.simple_config_parser.src.simple_config_parser.simple_config_parser import (
+    SimpleConfigParser,
+)
 from extensions.base_extension import BaseExtension
 from extensions.tmc_autotune import (
     KLIPPER_DIR,
     KLIPPER_EXTRAS,
     TMCA_DIR,
+    TMCA_EXEMPLE_CONFIG,
+    TMCA_MOONRAKER_UPDATER_NAME,
     TMCA_REPO,
 )
+from utils.config_utils import add_config_section, remove_config_section
 from utils.fs_utils import check_file_exist, create_symlink, run_remove_routines
 from utils.git_utils import git_clone_wrapper, git_pull_wrapper
 from utils.input_utils import get_confirm
 from utils.instance_utils import get_instances
+from utils.sys_utils import check_python_version
 
 
 # noinspection PyMethodMayBeStatic
@@ -27,24 +40,25 @@ class TmcAutotuneExtension(BaseExtension):
     def install_extension(self, **kwargs) -> None:
         Logger.print_status("Installing Klipper TMC Autotune...")
 
-        # Upstreams checks for python 3 over python 2.
-        # We can safely assume python > 3.8 is already installed as kiauh won't run without it.
-        # In the same way, git is a requirement for kiauh itself.
-
-        # Upstream also checks for klipper plugins at /klippy/plugins first.
-        # However, klipper has been using the extras directory at /klippy/extras
-        # for its extension modules since at least 2017.
-        klipper_dir_exists = check_file_exist(KLIPPER_DIR) and check_file_exist(
-            KLIPPER_EXTRAS
-        )
-
-        if not klipper_dir_exists:
-            Logger.print_warn("No Klipper (or extras) directory found! Aborting.")
+        # Check for Python 3.x, aligned with upstream install script
+        if not check_python_version(3, 0):
             return
 
-        # TODO: Maybe there is a better way?
-        tmca_exists = check_file_exist(TMCA_DIR) and check_file_exist(
-            KLIPPER_EXTRAS.joinpath("autotune_tmc.py")
+        # Upstream checks for klipper plugins at /klippy/plugins first. Not sure why, but
+        # we default to /klippy/extras here. Since Klipper has supposedly been installed via KIAUH,
+        # we can assume that the extras directory exists if klipper is installed.
+        klipper_dir_exists = check_file_exist(KLIPPER_DIR)
+        if not klipper_dir_exists:
+            Logger.print_warn(
+                "No Klipper directory found! Unable to install extension."
+            )
+            return
+
+        tmca_exists = (
+            check_file_exist(TMCA_DIR)
+            and check_file_exist(KLIPPER_EXTRAS.joinpath("autotune_tmc.py"))
+            and check_file_exist(KLIPPER_EXTRAS.joinpath("motor_constants.py"))
+            and check_file_exist(KLIPPER_EXTRAS.joinpath("motor_database.cfg"))
         )
 
         overwrite = True
@@ -55,13 +69,13 @@ class TmcAutotuneExtension(BaseExtension):
                 allow_go_back=False,
             )
 
-            if not overwrite:
-                Logger.print_warn("Installation aborted due to user request.")
-                return
+        if not overwrite:
+            Logger.print_warn("Installation aborted due to user request.")
+            return
 
-        # TODO: find a way to check if klipper is running in any instance
-        instances = get_instances(Klipper)
-        if instances:
+        # TODO: confirm this means that klipper is running (not just that it is installed)
+        kl_instances = get_instances(Klipper)
+        if kl_instances:
             Logger.print_dialog(
                 DialogType.ATTENTION,
                 [
@@ -77,7 +91,7 @@ class TmcAutotuneExtension(BaseExtension):
             )
 
             if stop_klipper:
-                InstanceManager.stop_all(instances)
+                InstanceManager.stop_all(kl_instances)
 
             else:
                 Logger.print_warn("Installation aborted due to user request.")
@@ -85,7 +99,7 @@ class TmcAutotuneExtension(BaseExtension):
 
         try:
             # Clone the repo into the target directory
-            git_clone_wrapper(TMCA_REPO, TMCA_DIR)
+            git_clone_wrapper(TMCA_REPO, TMCA_DIR, force=True)
 
             # Link the extension into klipper's extras folder
             Logger.print_info("Creating symlinks in Klipper extras directory...")
@@ -101,47 +115,247 @@ class TmcAutotuneExtension(BaseExtension):
                 TMCA_DIR.joinpath("motor_database.cfg"),
                 KLIPPER_EXTRAS.joinpath("motor_database.cfg"),
             )
+            Logger.print_ok("Symlinks created successfully for all instances.")
+
+            # TODO: confirm placement of this interaction
+            if get_confirm(
+                question="Create an example autotune_tmc.cfg in each printer config directory?",
+                default_choice=True,
+                allow_go_back=False,
+            ):
+                self.install_example_cfg(kl_instances)
+            else:
+                Logger.print_info(
+                    "Skipping example config creation as per user request."
+                )
+                Logger.print_warn(
+                    "Make sure to create and include an autotune_tmc.cfg in your printer.cfg in order to use the extension!"
+                )
+
+            # TODO: confirm placement of this interaction
+            if get_confirm(
+                question="Add Klipper TMC Autotune to Moonraker update manager(s)?",
+                default_choice=True,
+                allow_go_back=False,
+            ):
+                mr_instances = get_instances(Moonraker)
+                self.add_moonraker_update_manager_section(mr_instances)
+            else:
+                Logger.print_info(
+                    "Skipping update section creation as per user request."
+                )
+                Logger.print_warn(
+                    "Make sure to create the corresponding section in your moonraker.conf in order to have it appear in your frontend update manager!"
+                )
 
         except Exception as e:
             Logger.print_error(f"Error during Klipper TMC Autotune installation: {e}")
 
-            if instances:
+            if kl_instances:
                 Logger.print_info("Restarting Klipper...")
-                InstanceManager.start_all(instances)
+                InstanceManager.start_all(kl_instances)
             return
 
         # Restart klipper after installation
-        if instances:
-            InstanceManager.start_all(instances)
+        if kl_instances:
+            InstanceManager.start_all(kl_instances)
 
         Logger.print_ok("Klipper TMC Autotune installed successfully!")
 
     def update_extension(self, **kwargs) -> None:
-        raise NotImplementedError("Update not implemented yet.")
+        extension_installed = check_file_exist(TMCA_DIR)
+        if not extension_installed:
+            Logger.print_info("Extension does not seem to be installed! Skipping ...")
+            return
+
         Logger.print_status("Updating Klipper TMC Autotune...")
         try:
+            # TODO: manage backup of config files if changed upstream
+            # Option 1:
+            # settings = KiauhSettings()
+            # if settings.kiauh.backup_before_update:
+            #     backup_tmca_dir()
+
+            # Option 2:
+            if get_confirm(
+                question="Backup Klipper TMC Autotune directory before update?",
+                default_choice=True,
+                allow_go_back=True,
+            ):
+                Logger.print_status("Backing up Klipper TMC Autotune directory...")
+                svc = BackupService()
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                svc.backup_directory(
+                    source_path=TMCA_DIR,
+                    backup_name=f"klipper_tmc_autotune_{timestamp}",
+                )
+                Logger.print_ok("Backup completed successfully.")
+
             git_pull_wrapper(TMCA_DIR)
 
-            # TODO: manage backup of config files if changed upstream
+            Logger.print_ok("Klipper TMC Autotune updated successfully.", end="\n\n")
 
         except Exception as e:
-            Logger.print_error(f"Error during Klipper TMC Autotune update: {e}")
+            Logger.print_error(f"Error during Klipper TMC Autotune update:\n{e}")
 
     def remove_extension(self, **kwargs) -> None:
-        raise NotImplementedError("Removal not implemented yet.")
+        extension_installed = check_file_exist(TMCA_DIR)
+        if not extension_installed:
+            Logger.print_info("Extension does not seem to be installed! Skipping ...")
+            return
+
+        kl_instances = get_instances(Klipper)
+        if kl_instances:
+            Logger.print_dialog(
+                DialogType.ATTENTION,
+                [
+                    "Do NOT continue if there are ongoing prints running!",
+                    "All Klipper instances will be restarted during the removal process and "
+                    "ongoing prints WILL FAIL.",
+                ],
+            )
+            stop_klipper = get_confirm(
+                question="Stop Klipper now and proceed with removal of extension?",
+                default_choice=False,
+                allow_go_back=True,
+            )
+
+            if stop_klipper:
+                InstanceManager.stop_all(kl_instances)
+            else:
+                Logger.print_warn("Removal aborted due to user request.")
+                return
+
         try:
-            Logger.print_status("Removing Klipper TMC Autotune...")
-
-            # remove tmc autotune dir
+            # remove symlinks and extension directory
+            Logger.print_info("Removing Klipper TMC Autotune extension ...")
             run_remove_routines(TMCA_DIR)
+            Logger.print_info("Removing symlinks from Klipper extras directory ...")
+            run_remove_routines(KLIPPER_EXTRAS.joinpath("autotune_tmc.py"))
+            run_remove_routines(KLIPPER_EXTRAS.joinpath("motor_constants.py"))
+            run_remove_routines(KLIPPER_EXTRAS.joinpath("motor_database.cfg"))
 
-            # todo: remove symlinks from klipper config
-            # interactively ask if the user want to keep config and remove if required
+            # Remove from moonraker update manager if moonraker is installed
+            mr_instances: List[Moonraker] = get_instances(Moonraker)
+            if mr_instances:
+                Logger.print_status("Removing KlipperScreen from update manager ...")
+                Logger.print_info("Backing up moonraker.conf ...")
+                BackupService().backup_moonraker_conf()
+                Logger.print_info("Patching moonraker.conf ...")
+                remove_config_section("update_manager KlipperScreen", mr_instances)
+                Logger.print_ok(
+                    "KlipperScreen successfully removed from update manager!"
+                )
 
-            # restart klipper service to unload the extension
-            # warn the user interactively about ongoing prints
-
-            Logger.print_ok("Klipper TMC Autotune removed successfully.")
+            Logger.print_warn("PLEASE NOTE:")
+            Logger.print_warn(
+                "Remaining tmc_autotune section will cause Klipper to throw an error."
+            )
+            Logger.print_warn("Make sure to remove them from the printer.cfg!")
 
         except Exception as e:
-            Logger.print_error(f"Error during Klipper TMC Autotune removal: {e}")
+            Logger.print_error(f"Unable to remove extension: {e}")
+
+            if kl_instances:
+                Logger.print_info("Restarting Klipper...")
+                InstanceManager.start_all(kl_instances)
+            return
+
+        # Restart klipper after removal
+        if kl_instances:
+            InstanceManager.start_all(kl_instances)
+
+        Logger.print_ok("Klipper TMC Autotune removed successfully.")
+
+    def install_example_cfg(self, kl_instances: List[Klipper]):
+        cfg_dirs = [instance.base.cfg_dir for instance in kl_instances]
+
+        # copy extension to config directories
+        for cfg_dir in cfg_dirs:
+            Logger.print_status(f"Create autotune_tmc.cfg in '{cfg_dir}' ...")
+            if check_file_exist(cfg_dir.joinpath("autotune_tmc.cfg")):
+                Logger.print_info("File already exists! Skipping ...")
+                continue
+            try:
+                shutil.copy(TMCA_EXEMPLE_CONFIG, cfg_dir.joinpath("autotune_tmc.cfg"))
+                Logger.print_ok("Done!")
+            except OSError as e:
+                Logger.print_error(f"Unable to create example config: {e}")
+
+        # backup each printer.cfg before modification
+        svc = BackupService()
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        for instance in kl_instances:
+            svc.backup_file(
+                source_path=instance.cfg_file,
+                target_path=f"{instance.data_dir.name}/config_{timestamp}",
+                target_name=instance.cfg_file.name,
+            )
+
+        # add section to printer.cfg if not already defined
+        section = "include autotune_tmc.cfg"
+        cfg_files = [instance.cfg_file for instance in kl_instances]
+        for cfg_file in cfg_files:
+            Logger.print_status(f"Include autotune_tmc.cfg in '{cfg_file}' ...")
+            scp = SimpleConfigParser()
+            scp.read_file(cfg_file)
+            if scp.has_section(section):
+                Logger.print_info("Section already defined! Skipping ...")
+                continue
+            scp.add_section(section)
+            scp.write_file(cfg_file)
+            Logger.print_ok("Done!")
+
+    def add_moonraker_update_manager_section(
+        self, mr_instances: List[Moonraker]
+    ) -> None:
+        # check for moonraker instances and warn if none found
+        if not mr_instances:
+            Logger.print_dialog(
+                DialogType.WARNING,
+                [
+                    "Moonraker not found! Klipper TMC Autotune update manager support "
+                    "for Moonraker will not be added to moonraker.conf.",
+                ],
+            )
+            if not get_confirm(
+                "Continue Klipper TMC Autotune installation?",
+                default_choice=False,
+                allow_go_back=True,
+            ):
+                return
+
+        # backup any existing moonraker.conf before modification
+        BackupService().backup_moonraker_conf()
+
+        # add update_manager section to moonraker.conf
+        Logger.print_info(
+            "Adding Klipper TMC Autotune to Moonraker update manager(s) ..."
+        )
+        # TODO: use scp instead of helper function?
+        # TODO: check if section already exists using scp
+        add_config_section(
+            section=TMCA_MOONRAKER_UPDATER_NAME,
+            instances=mr_instances,
+            options=[
+                ("type", "git_repo"),
+                ("channel", "dev"),
+                ("path", TMCA_DIR.as_posix()),
+                ("origin", TMCA_REPO),
+                ("managed_services", "klipper"),
+                ("primary_branch", "main"),
+                # ("install_script", "install.sh"), # Shouldn't be necessary as soft links are already created
+            ],
+        )
+
+        # restart instances after patching
+        Logger.print_info("Restarting Moonraker")
+        InstanceManager.restart_all(mr_instances)
+
+        Logger.print_ok(
+            "Klipper TMC Autotune successfully added to each Moonraker update manager!"
+        )
+
+
+# TODO: add a PR for an option to call install_example_cfg without installing the whole app
+# TODO: add a PR for a copy helper function in kiauh/utils/fs_utils.py

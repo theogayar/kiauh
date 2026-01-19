@@ -8,8 +8,17 @@
 # ======================================================================= #
 from pathlib import Path
 
+# repo
+TMCA_REPO = "https://github.com/andrewmcgr/klipper_tmc_autotune"
+
+# directories
 MODULE_PATH = Path(__file__).resolve().parent
 KLIPPER_DIR = Path.home().joinpath("klipper")
 KLIPPER_EXTRAS = KLIPPER_DIR.joinpath("klippy/extras")
 TMCA_DIR = Path.home().joinpath("klipper_tmc_autotune")
-TMCA_REPO = "https://github.com/andrewmcgr/klipper_tmc_autotune"
+
+# files
+TMCA_EXEMPLE_CONFIG = TMCA_DIR.joinpath("docs/example.cfg")
+
+# names
+TMCA_MOONRAKER_UPDATER_NAME = "update_manager klipper_tmc_autotune"
