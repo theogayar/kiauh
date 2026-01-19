@@ -239,9 +239,7 @@ class TmcAutotuneExtension(BaseExtension):
             mr_instances: List[Moonraker] = get_instances(Moonraker)
             if mr_instances:
                 Logger.print_status("Removing KlipperScreen from update manager ...")
-                Logger.print_info("Backing up moonraker.conf ...")
                 BackupService().backup_moonraker_conf()
-                Logger.print_info("Patching moonraker.conf ...")
                 remove_config_section("update_manager KlipperScreen", mr_instances)
                 Logger.print_ok(
                     "KlipperScreen successfully removed from update manager!"
