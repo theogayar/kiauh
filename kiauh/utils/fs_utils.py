@@ -47,7 +47,16 @@ def check_file_exist(file_path: Path, sudo=False) -> bool:
 
 
 def create_symlink(source: Path, target: Path, sudo=False) -> None:
+    """
+    Helper function to create a symlink from source to target
+    If the target file exists, it will be overwritten. |
+    :param source: the source file/directory
+    :param target: the target file/directory
+    :param sudo: use sudo if required
+    :return: None
+    """
     try:
+        # -f forcibly creates/overwrites the symlink
         cmd = ["ln", "-sf", source.as_posix(), target.as_posix()]
         if sudo:
             cmd.insert(0, "sudo")
