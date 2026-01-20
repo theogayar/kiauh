@@ -115,7 +115,9 @@ class TmcAutotuneExtension(BaseExtension):
                 TMCA_DIR.joinpath("motor_database.cfg"),
                 KLIPPER_EXTRAS.joinpath("motor_database.cfg"),
             )
-            Logger.print_ok("Symlinks created successfully for all instances.")
+            Logger.print_ok(
+                "Symlinks created successfully for all instances.", end="\n\n"
+            )
 
             # TODO: confirm placement of this interaction
             if get_confirm(
@@ -286,7 +288,7 @@ class TmcAutotuneExtension(BaseExtension):
         for instance in kl_instances:
             svc.backup_file(
                 source_path=instance.cfg_file,
-                target_path=f"{instance.data_dir.name}/config_{timestamp}",
+                target_path=f"{instance.data_dir.name}/printer.cfg_{timestamp}",
                 target_name=instance.cfg_file.name,
             )
 
@@ -327,11 +329,6 @@ class TmcAutotuneExtension(BaseExtension):
         BackupService().backup_moonraker_conf()
 
         # add update_manager section to moonraker.conf
-        Logger.print_info(
-            "Adding Klipper TMC Autotune to Moonraker update manager(s) ..."
-        )
-        # TODO: use scp instead of helper function?
-        # TODO: check if section already exists using scp
         add_config_section(
             section=TMCA_MOONRAKER_UPDATER_NAME,
             instances=mr_instances,
@@ -347,7 +344,6 @@ class TmcAutotuneExtension(BaseExtension):
         )
 
         # restart instances after patching
-        Logger.print_info("Restarting Moonraker")
         InstanceManager.restart_all(mr_instances)
 
         Logger.print_ok(
@@ -357,3 +353,12 @@ class TmcAutotuneExtension(BaseExtension):
 
 # TODO: add a PR for an option to call install_example_cfg without installing the whole app
 # TODO: add a PR for a copy helper function in kiauh/utils/fs_utils.py
+# TODO: add a PR for an defined test environment / apt check ? 
+
+# TODO: fix the remove function : 
+# - currently not removing the section from printer.cfg
+# - the whole update manager section is currently removing / adding klipper screen
+# - symlinks removal could be improved with a helper function
+# - the interactive part is not working either, and it goes straight through
+
+
