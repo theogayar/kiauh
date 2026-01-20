@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -237,7 +237,6 @@ def install_input_shaper_deps() -> None:
             "If you agree, the following additional system packages will be installed:",
             "● python3-numpy",
             "● python3-matplotlib",
-            "● libatlas-base-dev",
             "● libopenblas-dev",
             "\n\n",
             "Also, the following Python package will be installed:",
@@ -253,7 +252,6 @@ def install_input_shaper_deps() -> None:
     apt_deps = (
         "python3-numpy",
         "python3-matplotlib",
-        "libatlas-base-dev",
         "libopenblas-dev",
     )
     check_install_dependencies({*apt_deps})

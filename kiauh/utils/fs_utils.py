@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -24,13 +24,16 @@ from core.logger import Logger
 
 def check_file_exist(file_path: Path, sudo=False) -> bool:
     """
-    Helper function for checking the existence of a file |
+    Helper function for checking the existence of a file.
+    Also works with symlinks (returns False if broken) |
     :param file_path: the absolute path of the file to check
     :param sudo: use sudo if required
     :return: True, if file exists, otherwise False
     """
     if sudo:
-        command = ["sudo", "find", file_path.as_posix()]
+        # -L forces find to follow symlinks
+        # -maxdepth = 0 avoids losing time if `file_path` is a directory
+        command = ["sudo", "find", "-L", file_path.as_posix(), "-maxdepth", "0"]
         try:
             check_output(command, stderr=DEVNULL)
             return True
@@ -44,7 +47,16 @@ def check_file_exist(file_path: Path, sudo=False) -> bool:
 
 
 def create_symlink(source: Path, target: Path, sudo=False) -> None:
+    """
+    Helper function to create a symlink from source to target
+    If the target file exists, it will be overwritten. |
+    :param source: the source file/directory
+    :param target: the target file/directory
+    :param sudo: use sudo if required
+    :return: None
+    """
     try:
+        # -f forcibly creates/overwrites the symlink
         cmd = ["ln", "-sf", source.as_posix(), target.as_posix()]
         if sudo:
             cmd.insert(0, "sudo")

@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -97,7 +97,7 @@ class ClientInstallMenu(BaseMenu):
         self.message_service.set_message(message)
 
     def _get_current_port(self) -> int:
-        curr_port = get_nginx_listen_port(self.client.nginx_config)
+        curr_port: int | None = get_nginx_listen_port(self.client.nginx_config)
         if curr_port is None:
             # if the port is not found in the config file we use
             # the default port from the kiauh settings as fallback

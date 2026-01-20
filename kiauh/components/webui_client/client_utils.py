@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -78,10 +78,10 @@ def get_current_client_config() -> str:
     installed = [c for c in clients if c.client_config.config_dir.exists()]
 
     if not installed:
-        return Color.apply("-", Color.CYAN)
+        return str(Color.apply("-", Color.CYAN))
     elif len(installed) == 1:
         cfg = installed[0].client_config
-        return Color.apply(cfg.display_name, Color.CYAN)
+        return str(Color.apply(cfg.display_name, Color.CYAN))
 
     # at this point, both client config folders exists, so we need to check
     # which are actually included in the printer.cfg of all klipper instances
@@ -100,18 +100,18 @@ def get_current_client_config() -> str:
 
         # if both are included in the same file, we have a potential conflict
         if includes_mainsail and includes_fluidd:
-            return Color.apply("Conflict", Color.YELLOW)
+            return str(Color.apply("Conflict", Color.YELLOW))
 
     if not mainsail_includes and not fluidd_includes:
         # there are no includes at all, even though the client config folders exist
-        return Color.apply("-", Color.CYAN)
+        return str(Color.apply("-", Color.CYAN))
     elif len(fluidd_includes) > len(mainsail_includes):
         # there are more instances that include fluidd than mainsail
-        return Color.apply(fluidd.client_config.display_name, Color.CYAN)
+        return str(Color.apply(fluidd.client_config.display_name, Color.CYAN))
     else:
         # there are the same amount of non-conflicting includes for each config
         # or more instances include mainsail than fluidd
-        return Color.apply(mainsail.client_config.display_name, Color.CYAN)
+        return str(Color.apply(mainsail.client_config.display_name, Color.CYAN))
 
 
 def enable_mainsail_remotemode() -> None:
@@ -152,10 +152,9 @@ def symlink_webui_nginx_log(
 def get_local_client_version(client: BaseWebClient) -> str | None:
     relinfo_file = client.client_dir.joinpath("release_info.json")
     version_file = client.client_dir.joinpath(".version")
-    default = "n/a"
 
     if not client.client_dir.exists():
-        return default
+        return None
 
     # try to get version from release_info.json first
     if relinfo_file.is_file():
@@ -177,11 +176,11 @@ def get_local_client_version(client: BaseWebClient) -> str | None:
         try:
             with open(version_file, "r") as f:
                 line = f.readline().strip()
-            return line or default
+            return line or None
         except OSError:
             Logger.print_error("Unable to read '.version'")
 
-    return default
+    return None
 
 
 def get_remote_client_version(client: BaseWebClient) -> str | None:
@@ -446,9 +445,9 @@ def get_client_port_selection(
     while True:
         _type = "Reconfigure" if reconfigure else "Configure"
         question = f"{_type} {client.display_name} for port"
-        port_input = get_number_input(question, min_value=80, default=port)
+        port_input: int | None = get_number_input(question, min_value=80, default=port)
 
-        if port_input not in ports_in_use:
+        if port_input and port_input not in ports_in_use:
             client_settings: WebUiSettings = settings[client.name]
             client_settings.port = port_input
             settings.save()

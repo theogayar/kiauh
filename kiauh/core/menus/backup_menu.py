@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -60,7 +60,7 @@ class BackupMenu(BaseMenu):
 
     def print_menu(self) -> None:
         line1 = Color.apply(
-            "INFO: Backups are located in '~/kiauh-backups'", Color.YELLOW
+            "INFO: Backups are located in '~/kiauh_backups'", Color.YELLOW
         )
         menu = textwrap.dedent(
             f"""

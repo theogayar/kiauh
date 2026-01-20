@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -272,14 +272,14 @@ class UpdateMenu(BaseMenu):
 
     def _format_local_status(self, local_version, remote_version) -> str:
         color = Color.RED
-        if not local_version:
+        if local_version is None:
             color = Color.RED
         elif local_version == remote_version:
             color = Color.GREEN
         elif local_version != remote_version:
             color = Color.YELLOW
 
-        return Color.apply(local_version or "-", color)
+        return str(Color.apply(local_version or '-', color))
 
     def _set_status_data(self, name: str, status_fn: Callable, *args) -> None:
         comp_status: ComponentStatus = status_fn(*args)
@@ -305,7 +305,13 @@ class UpdateMenu(BaseMenu):
         return self.status_data[name]["installed"]
 
     def _is_update_available(self, name: str) -> bool:
-        return self.status_data[name]["local"] != self.status_data[name]["remote"]
+        local = self.status_data[name]["local"]
+        remote = self.status_data[name]["remote"]
+
+        if local is None or remote is None:
+            return False
+
+        return local != remote
 
     def _run_update_routine(self, name: str, update_fn: Callable, *args) -> None:
         display_name = self.status_data[name]["display_name"]
@@ -320,6 +326,27 @@ class UpdateMenu(BaseMenu):
             return
 
         update_fn(*args)
+
+        self._refresh_component_status(name)
+
+    def _refresh_component_status(self, name: str) -> None:
+        """Refresh the status data for a component after an update."""
+        if name == "klipper":
+            self._set_status_data("klipper", get_klipper_status)
+        elif name == "moonraker":
+            self._set_status_data("moonraker", get_moonraker_status)
+        elif name == "mainsail":
+            self._set_status_data("mainsail", get_client_status, self.mainsail_data, True)
+        elif name == "mainsail_config":
+            self._set_status_data("mainsail_config", get_client_config_status, self.mainsail_data)
+        elif name == "fluidd":
+            self._set_status_data("fluidd", get_client_status, self.fluidd_data, True)
+        elif name == "fluidd_config":
+            self._set_status_data("fluidd_config", get_client_config_status, self.fluidd_data)
+        elif name == "klipperscreen":
+            self._set_status_data("klipperscreen", get_klipperscreen_status)
+        elif name == "crowsnest":
+            self._set_status_data("crowsnest", get_crowsnest_status)
 
     def _run_system_updates(self) -> None:
         if not self.packages:

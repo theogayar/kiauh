@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -97,7 +97,7 @@ class GcodeShellCmdExtension(BaseExtension):
 
     def install_example_cfg(self, instances: List[Klipper]):
         cfg_dirs = [instance.base.cfg_dir for instance in instances]
-        # copy extension to klippy/extras
+        # copy extension to config directories
         for cfg_dir in cfg_dirs:
             Logger.print_status(f"Create shell_command.cfg in '{cfg_dir}' ...")
             if check_file_exist(cfg_dir.joinpath("shell_command.cfg")):

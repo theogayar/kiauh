@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -156,7 +156,7 @@ def format_question(question: str, default=None) -> str:
     if default is not None:
         formatted_q += f" (default={default})"
 
-    return Color.apply(f"###### {formatted_q}: ", Color.CYAN)
+    return str(Color.apply(f"###### {formatted_q}: ", Color.CYAN))
 
 
 def validate_number_input(value: str, min_count: int, max_count: int | None) -> int:

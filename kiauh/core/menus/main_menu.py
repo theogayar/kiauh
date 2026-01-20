@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -97,8 +97,8 @@ class MainMenu(BaseMenu):
         status_data: ComponentStatus = status_fn(*args)
         code: int = status_data.status
         status: StatusText = StatusMap[code]
-        owner: str = trunc_string(status_data.owner, 23)
-        repo: str = trunc_string(status_data.repo, 23)
+        owner: str = trunc_string(status_data.owner, 23) if status_data.owner else '-'
+        repo: str = trunc_string(status_data.repo, 23) if status_data.repo else '-'
         instance_count: int = status_data.instances
 
         count_txt: str = ""

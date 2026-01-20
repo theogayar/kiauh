@@ -1,5 +1,5 @@
 # ======================================================================= #
-#  Copyright (C) 2020 - 2025 Dominik Willner <th33xitus@gmail.com>        #
+#  Copyright (C) 2020 - 2026 Dominik Willner <th33xitus@gmail.com>        #
 #                                                                         #
 #  This file is part of KIAUH - Klipper Installation And Update Helper    #
 #  https://github.com/dw-0/kiauh                                          #
@@ -236,9 +236,11 @@ class KlipperSelectMcuConnectionMenu(BaseMenu):
         if len(self.flash_options.mcu_list) < 1:
             Logger.print_warn("No MCUs found!")
             Logger.print_warn("Make sure they are connected and repeat this step.")
+            time.sleep(3)
+            return
 
         # if standalone is True, we only display the MCUs to the user and return
-        if self.__standalone and len(self.flash_options.mcu_list) > 0:
+        if self.__standalone:
             Logger.print_ok("The following MCUs were found:", prefix=False)
             for i, mcu in enumerate(self.flash_options.mcu_list):
                 print(f"   ● MCU #{i}: {Color.CYAN}{mcu}{Color.RST}")

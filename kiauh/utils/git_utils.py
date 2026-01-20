@@ -73,44 +73,44 @@ def git_pull_wrapper(target_dir: Path) -> None:
         return
 
 
-def get_repo_name(repo: Path) -> Tuple[str, str]:
+def get_repo_name(repo: Path) -> Tuple[str | None, str | None]:
     """
     Helper method to extract the organisation and name of a repository |
     :param repo: repository to extract the values from
     :return: String in form of "<orga>/<name>" or None
     """
     if not repo.exists() or not repo.joinpath(".git").exists():
-        return "-", "-"
+        return None, None
 
     try:
         cmd = ["git", "-C", repo.as_posix(), "config", "--get", "remote.origin.url"]
         result: str = check_output(cmd, stderr=DEVNULL).decode(encoding="utf-8")
         substrings: List[str] = result.strip().split("/")[-2:]
 
-        orga: str = substrings[0] if substrings[0] else "-"
-        name: str = substrings[1] if substrings[1] else "-"
+        orga: str | None = substrings[0] if substrings[0] else None
+        name: str | None = substrings[1] if substrings[1] else None
 
-        return orga, name.replace(".git", "")
+        return orga, name.replace(".git", "") if name else None
 
     except CalledProcessError:
-        return "-", "-"
+        return None, None
 
 
-def get_current_branch(repo: Path) -> str:
+def get_current_branch(repo: Path) -> str | None:
     """
     Get the current branch of a local Git repository
     :param repo: Path to the local Git repository
-    :return: Current branch
+    :return: Current branch or None if not determinable
     """
     try:
         cmd = ["git", "branch", "--show-current"]
         result: str = check_output(cmd, stderr=DEVNULL, cwd=repo).decode(
             encoding="utf-8"
         )
-        return result.strip() if result else "-"
+        return result.strip() if result else None
 
     except CalledProcessError:
-        return "-"
+        return None
 
 
 def get_local_tags(repo_path: Path, _filter: str | None = None) -> List[str]:
