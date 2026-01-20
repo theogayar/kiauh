@@ -41,7 +41,7 @@ def add_config_section(
         scp = SimpleConfigParser()
         scp.read_file(cfg_file)
         if scp.has_section(section):
-            Logger.print_info("Section already exist. Skipped ...")
+            Logger.print_info("Section already exists. Skipped ...")
             continue
 
         scp.add_section(section)
