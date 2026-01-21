@@ -166,7 +166,7 @@ class TmcAutotuneExtension(BaseExtension):
 
     def update_extension(self, **kwargs) -> None:
         # TODO: consider warning the user if klipper is running, as update might affect ongoing prints
-        
+
         extension_installed = check_file_exist(TMCA_DIR)
         if not extension_installed:
             Logger.print_info("Extension does not seem to be installed! Skipping ...")
@@ -241,19 +241,28 @@ class TmcAutotuneExtension(BaseExtension):
             # Remove from moonraker update manager if moonraker is installed
             mr_instances: List[Moonraker] = get_instances(Moonraker)
             if mr_instances:
-                Logger.print_status("Removing Klipper TMC Autotune from update manager ...")
+                Logger.print_status(
+                    "Removing Klipper TMC Autotune from update manager ..."
+                )
                 BackupService().backup_moonraker_conf()
-                remove_config_section("update_manager klipper_tmc_autotune", mr_instances)
+                remove_config_section(
+                    "update_manager klipper_tmc_autotune", mr_instances
+                )
                 Logger.print_ok(
                     "Klipper TMC Autotune successfully removed from update manager!"
                 )
 
+            # Remove include from printer.cfg files
+            Logger.print_status("Removing include from printer.cfg files ...")
+            remove_config_section("include autotune_tmc.cfg", kl_instances)
+
             Logger.print_warn("PLEASE NOTE:")
             Logger.print_warn(
-                "1. Remaining tmc_autotune section will cause Klipper to throw an error."
+                "1. You may have to modify your printer.cfg file(s) manually if you have steppers using exotic configs"
             )
-            Logger.print_warn("   Make sure to remove them from the printer.cfg!")
-            Logger.print_warn("2. Removal of the tmc_autotune.cfg file is NOT performed automatically.")
+            Logger.print_warn(
+                "2. Removal of the tmc_autotune.cfg file is NOT performed automatically."
+            )
 
         except Exception as e:
             Logger.print_error(f"Unable to remove extension: {e}")
@@ -327,7 +336,7 @@ class TmcAutotuneExtension(BaseExtension):
             ):
                 Logger.print_info("Installation aborted due to user request.")
                 return
-            
+
         # backup any existing moonraker.conf before modification
         BackupService().backup_moonraker_conf()
 
@@ -356,8 +365,7 @@ class TmcAutotuneExtension(BaseExtension):
 
 # TODO: add a PR for an option to call install_example_cfg without installing the whole app > modular approach for functions with a flag?
 # TODO: add a PR for a copy helper function in kiauh/utils/fs_utils.py
-# TODO: add a PR for a defined test environment / apt check ? 
+# TODO: add a PR for a defined test environment / apt check ?
 
-# TODO: fix the remove function : 
+# TODO: fix the remove function :
 # - currently not removing the section from printer.cfg
-
