@@ -250,9 +250,10 @@ class TmcAutotuneExtension(BaseExtension):
 
             Logger.print_warn("PLEASE NOTE:")
             Logger.print_warn(
-                "Remaining tmc_autotune section will cause Klipper to throw an error."
+                "1. Remaining tmc_autotune section will cause Klipper to throw an error."
             )
-            Logger.print_warn("Make sure to remove them from the printer.cfg!")
+            Logger.print_warn("   Make sure to remove them from the printer.cfg!")
+            Logger.print_warn("2. Removal of the tmc_autotune.cfg file is NOT performed automatically.")
 
         except Exception as e:
             Logger.print_error(f"Unable to remove extension: {e}")
