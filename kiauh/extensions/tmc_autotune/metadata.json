@@ -2,7 +2,7 @@
   "metadata": {
     "index": 13,
     "module": "tmc_autotune_extension",
-    "maintained_by": "andrewmcgr",
+    "maintained_by": "theogayar",
     "display_name": "Klipper TMC Autotune",
     "description": [
       "Klipper extension for automatic configuration and tuning of TMC drivers."

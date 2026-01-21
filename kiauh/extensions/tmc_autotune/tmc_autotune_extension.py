@@ -360,6 +360,7 @@ class TmcAutotuneExtension(BaseExtension):
 # TODO: add a PR for an option to call install_example_cfg without installing the whole app > modular approach for functions with a flag?
 # TODO: add a PR for a copy helper function in kiauh/utils/fs_utils.py
 # TODO: add a PR for a defined test environment / apt check ?
+# TODO: add a PR to improve the include adder so that it adds the section at a more appropriate place (e.g. at the top.)
 
-# TODO: fix the remove function :
-# - currently not removing the section from printer.cfg
+# TODO: fix the backup service so that the file name is proper
+# TODO: let the git wrapper handle the prompt for overwriting local changes
