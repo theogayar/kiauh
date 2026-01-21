@@ -354,14 +354,10 @@ class TmcAutotuneExtension(BaseExtension):
         )
 
 
-# TODO: add a PR for an option to call install_example_cfg without installing the whole app
+# TODO: add a PR for an option to call install_example_cfg without installing the whole app > modular approach for functions with a flag?
 # TODO: add a PR for a copy helper function in kiauh/utils/fs_utils.py
-# TODO: add a PR for an defined test environment / apt check ? 
+# TODO: add a PR for a defined test environment / apt check ? 
 
 # TODO: fix the remove function : 
 # - currently not removing the section from printer.cfg
-# - the whole update manager section is currently removing / adding klipper screen
-# - symlinks removal could be improved with a helper function
-# - the interactive part is not working either, and it goes straight through
-
 
