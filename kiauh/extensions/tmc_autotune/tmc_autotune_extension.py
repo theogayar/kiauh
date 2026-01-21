@@ -150,16 +150,15 @@ class TmcAutotuneExtension(BaseExtension):
             Logger.print_dialog(
                 DialogType.ATTENTION,
                 [
-                    "During the installation of Klipper TMC Autotune, "
-                    "a basic config was created per instance. You need to edit the config "
-                    "file in order to enable the extension for your specific instances. "
-                    "Please refer to the official documentation page for further information:",
+                    "Basic configuration files were created per instance. You must edit them to enable the extension.",
+                    "Documentation:",
                     f"{TMCA_REPO}",
-                    "",
-                    "Also note that you should create your ",
-                    "[autotune_tmc stepper_xyz] sections only in the autotune_tmc.cfg "
-                    "files and NOT in the printer.cfg files directly, "
-                    "contrary to what is advised in the official documentation.",
+                    "\n\n",
+                    "IMPORTANT:",
+                    "Define [autotune_tmc] sections ONLY in",
+                    "'autotune_tmc.cfg'.",
+                    "Do NOT add them to 'printer.cfg', contrary to official docs. "
+                    "While not fatal, mixing configs breaks file segmentation and is bad practice.",
                 ],
                 margin_bottom=1,
             )
