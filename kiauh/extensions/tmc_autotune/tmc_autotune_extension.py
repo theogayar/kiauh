@@ -397,11 +397,8 @@ class TmcAutotuneExtension(BaseExtension):
             return False
 
 
-# TODO: add a PR for an option to call install_example_cfg without installing the whole app > modular approach for functions with a flag?
+# TODO: add a PR for an option to call _install_example_cfg without installing the whole app > modular approach for functions with a flag?
 # TODO: add a PR for a copy helper function in kiauh/utils/fs_utils.py
-# TODO: add a PR for a defined test environment / apt check ?
-# TODO: add a PR to improve the include adder so that it adds the section at a more appropriate place (e.g. at the top.)
+# TODO: add a PR for a defined test environment / apt check ? > currenltly being worked on
+# TODO: add a PR to improve the include adder so that it adds the section at a more appropriate place (e.g. at the top.) > detect include section placement
 # TODO: add a PR to move the instance stopper and restart to instance utils
-
-# TODO: let the git wrapper handle the prompt for overwriting local changes
-# TODO: put the interactivity at the top of the installers/updater/remover functions
