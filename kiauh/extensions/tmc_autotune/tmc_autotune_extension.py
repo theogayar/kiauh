@@ -7,7 +7,6 @@
 #  This file may be distributed under the terms of the GNU GPLv3 license  #
 # ======================================================================= #
 import shutil
-from datetime import datetime
 from typing import List
 
 from components.klipper.klipper import Klipper
@@ -42,6 +41,7 @@ class TmcAutotuneExtension(BaseExtension):
 
         # Check for Python 3.x, aligned with upstream install script
         if not check_python_version(3, 0):
+            Logger.print_warn("Python 3.x is required. Aborting install.")
             return
 
         # Upstream checks for klipper plugins at /klippy/plugins first. Not sure why, but
@@ -85,7 +85,7 @@ class TmcAutotuneExtension(BaseExtension):
                 ],
             )
             stop_klipper = get_confirm(
-                question="Stop Klipper now?",
+                question="Stop Klipper now and proceed with installation?",
                 default_choice=False,
                 allow_go_back=True,
             )
@@ -252,8 +252,9 @@ class TmcAutotuneExtension(BaseExtension):
                     "Klipper TMC Autotune successfully removed from update manager!"
                 )
 
-            # Remove include from printer.cfg files
+            # Remove include from printer.cfg files, backing them up first
             Logger.print_status("Removing include from printer.cfg files ...")
+            BackupService().backup_printer_cfg()
             remove_config_section("include autotune_tmc.cfg", kl_instances)
 
             Logger.print_warn("PLEASE NOTE:")
@@ -294,14 +295,7 @@ class TmcAutotuneExtension(BaseExtension):
                 Logger.print_error(f"Unable to create example config: {e}")
 
         # backup each printer.cfg before modification
-        svc = BackupService()
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        for instance in kl_instances:
-            svc.backup_file(
-                source_path=instance.cfg_file,
-                target_path=f"{instance.data_dir.name}/printer-{timestamp}.cfg",
-                target_name=instance.cfg_file.name,
-            )
+        BackupService().backup_printer_cfg()
 
         # add section to printer.cfg if not already defined
         section = "include autotune_tmc.cfg"
