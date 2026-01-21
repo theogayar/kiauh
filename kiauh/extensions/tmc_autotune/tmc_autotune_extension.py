@@ -155,8 +155,7 @@ class TmcAutotuneExtension(BaseExtension):
                     f"{TMCA_REPO}",
                     "\n\n",
                     "IMPORTANT:",
-                    "Define [autotune_tmc] sections ONLY in",
-                    "'autotune_tmc.cfg'.",
+                    "Define [autotune_tmc] sections ONLY in 'autotune_tmc.cfg'. ",
                     "Do NOT add them to 'printer.cfg', contrary to official docs. "
                     "While not fatal, mixing configs breaks file segmentation and is bad practice.",
                 ],
