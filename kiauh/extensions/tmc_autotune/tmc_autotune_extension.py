@@ -325,8 +325,9 @@ class TmcAutotuneExtension(BaseExtension):
                 default_choice=False,
                 allow_go_back=True,
             ):
+                Logger.print_info("Installation aborted due to user request.")
                 return
-
+            
         # backup any existing moonraker.conf before modification
         BackupService().backup_moonraker_conf()
 
