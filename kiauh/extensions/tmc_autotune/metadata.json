@@ -7,7 +7,7 @@
     "description": [
       "Klipper extension for automatic configuration and tuning of TMC drivers."
     ],
-    "repo": "https://github.com/andrewmcgr/tmc_autotune",
+    "repo": "https://github.com/andrewmcgr/klipper_tmc_autotune",
     "updates": true
   }
 }
