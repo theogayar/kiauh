@@ -73,29 +73,12 @@ class TmcAutotuneExtension(BaseExtension):
             Logger.print_warn("Installation aborted due to user request.")
             return
 
-        # TODO: confirm this means that klipper is running (not just that it is installed)
         kl_instances = get_instances(Klipper)
-        if kl_instances:
-            Logger.print_dialog(
-                DialogType.ATTENTION,
-                [
-                    "Do NOT continue if there are ongoing prints running!",
-                    "All Klipper instances will be restarted during the install process and "
-                    "ongoing prints WILL FAIL.",
-                ],
-            )
-            stop_klipper = get_confirm(
-                question="Stop Klipper now and proceed with installation?",
-                default_choice=False,
-                allow_go_back=True,
-            )
 
-            if stop_klipper:
-                InstanceManager.stop_all(kl_instances)
-
-            else:
-                Logger.print_warn("Installation aborted due to user request.")
-                return
+        if not self._stop_klipper_instances_interactively(
+            kl_instances, "installation of TMC Autotune"
+        ):
+            return
 
         try:
             # Clone the repo into the target directory
@@ -126,7 +109,7 @@ class TmcAutotuneExtension(BaseExtension):
                 allow_go_back=False,
             )
             if create_config:
-                self.install_example_cfg(kl_instances)
+                self._install_example_cfg(kl_instances)
             else:
                 Logger.print_info(
                     "Skipping example config creation as per user request."
@@ -142,7 +125,7 @@ class TmcAutotuneExtension(BaseExtension):
                 allow_go_back=False,
             ):
                 mr_instances = get_instances(Moonraker)
-                self.add_moonraker_update_manager_section(mr_instances)
+                self._add_moonraker_update_manager_section(mr_instances)
             else:
                 Logger.print_info(
                     "Skipping update section creation as per user request."
@@ -152,10 +135,10 @@ class TmcAutotuneExtension(BaseExtension):
                 )
 
         except Exception as e:
-            Logger.print_error(f"Error during Klipper TMC Autotune installation: {e}")
+            Logger.print_error(f"Error during Klipper TMC Autotune installation:\n{e}")
 
+            # Restart klipper after installation attempt
             if kl_instances:
-                Logger.print_info("Restarting Klipper...")
                 InstanceManager.start_all(kl_instances)
             return
 
@@ -168,13 +151,14 @@ class TmcAutotuneExtension(BaseExtension):
                 DialogType.ATTENTION,
                 [
                     "During the installation of Klipper TMC Autotune, "
-                    "a basic config was created per instance. You need to edit the config"
+                    "a basic config was created per instance. You need to edit the config "
                     "file in order to enable the extension for your specific instances. "
                     "Please refer to the official documentation page for further information:",
                     f"{TMCA_REPO}",
                     "",
-                    "Also note that you should create your [autotune_tmc stepper_xyz] sections"
-                    "only in the autotune_tmc.cfg files and NOT in the printer.cfg files directly,",
+                    "Also note that you should create your ",
+                    "[autotune_tmc stepper_xyz] sections only in the autotune_tmc.cfg "
+                    "files and NOT in the printer.cfg files directly, "
                     "contrary to what is advised in the official documentation.",
                 ],
                 margin_bottom=1,
@@ -183,22 +167,19 @@ class TmcAutotuneExtension(BaseExtension):
         Logger.print_ok("Klipper TMC Autotune installed successfully!")
 
     def update_extension(self, **kwargs) -> None:
-        # TODO: consider warning the user if klipper is running, as update might affect ongoing prints
-
         extension_installed = check_file_exist(TMCA_DIR)
         if not extension_installed:
             Logger.print_info("Extension does not seem to be installed! Skipping ...")
             return
 
+        kl_instances = get_instances(Klipper)
+        if not self._stop_klipper_instances_interactively(
+            kl_instances, "update of TMC Autotune"
+        ):
+            return
+
         Logger.print_status("Updating Klipper TMC Autotune...")
         try:
-            # TODO: decide on backup strategy here
-            # Option 1:
-            # settings = KiauhSettings()
-            # if settings.kiauh.backup_before_update:
-            #     backup_tmca_dir()
-
-            # Option 2:
             if get_confirm(
                 question="Backup Klipper TMC Autotune directory before update?",
                 default_choice=True,
@@ -214,10 +195,19 @@ class TmcAutotuneExtension(BaseExtension):
 
             git_pull_wrapper(TMCA_DIR)
 
-            Logger.print_ok("Klipper TMC Autotune updated successfully.", end="\n\n")
-
         except Exception as e:
             Logger.print_error(f"Error during Klipper TMC Autotune update:\n{e}")
+
+            # Restart klipper after update attempt
+            if kl_instances:
+                InstanceManager.start_all(kl_instances)
+                return
+
+        # Restart klipper after update
+        if kl_instances:
+            InstanceManager.start_all(kl_instances)
+
+        Logger.print_ok("Klipper TMC Autotune updated successfully.", end="\n\n")
 
     def remove_extension(self, **kwargs) -> None:
         extension_installed = check_file_exist(TMCA_DIR)
@@ -226,26 +216,11 @@ class TmcAutotuneExtension(BaseExtension):
             return
 
         kl_instances = get_instances(Klipper)
-        if kl_instances:
-            Logger.print_dialog(
-                DialogType.ATTENTION,
-                [
-                    "Do NOT continue if there are ongoing prints running!",
-                    "All Klipper instances will be restarted during the removal process and "
-                    "ongoing prints WILL FAIL.",
-                ],
-            )
-            stop_klipper = get_confirm(
-                question="Stop Klipper now and proceed with removal of extension?",
-                default_choice=False,
-                allow_go_back=True,
-            )
 
-            if stop_klipper:
-                InstanceManager.stop_all(kl_instances)
-            else:
-                Logger.print_warn("Removal aborted due to user request.")
-                return
+        if not self._stop_klipper_instances_interactively(
+            kl_instances, "removal of TMC Autotune"
+        ):
+            return
 
         try:
             # remove symlinks and extension directory
@@ -280,17 +255,18 @@ class TmcAutotuneExtension(BaseExtension):
                 [
                     "You may have to modify your printer.cfg files(s) manually, "
                     "if you have steppers using exotic configs.",
-                    ""
-                    "Please also note that removal of autotune_tmc.cfg is not performed automatically. ",
+                    "",
+                    "Please also note that removal of autotune_tmc.cfg is not "
+                    "performed automatically. ",
                 ],
                 margin_bottom=1,
             )
 
         except Exception as e:
-            Logger.print_error(f"Unable to remove extension: {e}")
+            Logger.print_error(f"Unable to remove extension:\n{e}")
 
+            # Restart klipper after removal attempt
             if kl_instances:
-                Logger.print_info("Restarting Klipper...")
                 InstanceManager.start_all(kl_instances)
             return
 
@@ -300,7 +276,7 @@ class TmcAutotuneExtension(BaseExtension):
 
         Logger.print_ok("Klipper TMC Autotune removed successfully.")
 
-    def install_example_cfg(self, kl_instances: List[Klipper]):
+    def _install_example_cfg(self, kl_instances: List[Klipper]):
         cfg_dirs = [instance.base.cfg_dir for instance in kl_instances]
 
         # copy extension to config directories
@@ -310,7 +286,7 @@ class TmcAutotuneExtension(BaseExtension):
                 Logger.print_info("File already exists! Skipping ...")
                 continue
             try:
-                shutil.copy(TMCA_EXEMPLE_CONFIG, cfg_dir.joinpath("autotune_tmc.cfg"))
+                shutil.copy(TMCA_EXAMPLE_CONFIG, cfg_dir.joinpath("autotune_tmc.cfg"))
                 Logger.print_ok("Done!")
             except OSError as e:
                 Logger.print_error(f"Unable to create example config: {e}")
@@ -332,7 +308,7 @@ class TmcAutotuneExtension(BaseExtension):
             scp.write_file(cfg_file)
             Logger.print_ok("Done!")
 
-    def add_moonraker_update_manager_section(
+    def _add_moonraker_update_manager_section(
         self, mr_instances: List[Moonraker]
     ) -> None:
         # check for moonraker instances and warn if none found
@@ -374,14 +350,55 @@ class TmcAutotuneExtension(BaseExtension):
         InstanceManager.restart_all(mr_instances)
 
         Logger.print_ok(
-            "Klipper TMC Autotune successfully added to each Moonraker update manager!"
+            "Klipper TMC Autotune successfully added to Moonraker update manager(s)!"
         )
+
+    def _stop_klipper_instances_interactively(
+        self, kl_instances: List[Klipper], operation_name: str = "operation"
+    ) -> bool:
+        """
+        Interactively stops all active Klipper instances, warning the user that ongoing prints will be disrupted.
+
+        :param kl_instances: List of Klipper instances to stop.
+        :param operation_name: Optional name of the operation being performed (for user messaging). Do NOT capitalize.
+        :return: True if instances were stopped or no instances found, False if operation was aborted.
+        """
+
+        if not kl_instances:
+            Logger.print_warn("No instances found, skipping instance stopping.")
+            return True
+
+        Logger.print_dialog(
+            DialogType.ATTENTION,
+            [
+                "Do NOT continue if there are ongoing prints running",
+                f"All Klipper instances will be restarted during the {operation_name} and "
+                "ongoing prints WILL FAIL.",
+            ],
+        )
+        stop_klipper = get_confirm(
+            question=f"Stop Klipper now and proceed with {operation_name}?",
+            default_choice=False,
+            allow_go_back=True,
+        )
+
+        if stop_klipper:
+            InstanceManager.stop_all(kl_instances)
+            return True
+        else:
+            Logger.print_warn(
+                f"{operation_name.capitalize()} aborted due to user request."
+            )
+            return False
 
 
 # TODO: add a PR for an option to call install_example_cfg without installing the whole app > modular approach for functions with a flag?
 # TODO: add a PR for a copy helper function in kiauh/utils/fs_utils.py
 # TODO: add a PR for a defined test environment / apt check ?
 # TODO: add a PR to improve the include adder so that it adds the section at a more appropriate place (e.g. at the top.)
+# TODO: add a PR to move the instance stopper and restart to instance utils
 
 # TODO: fix the backup service so that the file name is proper
 # TODO: let the git wrapper handle the prompt for overwriting local changes
+# TODO: fix the warning dialogs formatting
+# TODO: put the interactivity at the top of the installers/updater/remover functions
