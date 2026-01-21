@@ -142,7 +142,8 @@ class BackupService:
             self.backup_file(
                 source_path=instance.cfg_file,
                 target_path=target_path,
-                target_name=instance.cfg_file.name,
+                
+                #target_name=instance.cfg_file.name,
             )
 
     def backup_moonraker_conf(self):
