@@ -251,11 +251,11 @@ class TmcAutotuneExtension(BaseExtension):
             Logger.print_dialog(
                 DialogType.ATTENTION,
                 [
-                    "You may have to modify your printer.cfg files(s) manually, "
-                    "if you have steppers using exotic configs.",
-                    "",
-                    "Please also note that removal of autotune_tmc.cfg is not "
-                    "performed automatically. ",
+                    "Manual edits to 'printer.cfg' may be required if using exotic stepper configurations.",
+                    "\n\n",
+                    "NOTE:",
+                    "'autotune_tmc.cfg' is NOT removed automatically. ",
+                    "Please delete it manually if no longer needed.",
                 ],
                 margin_bottom=1,
             )
