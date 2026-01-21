@@ -165,6 +165,8 @@ class TmcAutotuneExtension(BaseExtension):
         Logger.print_ok("Klipper TMC Autotune installed successfully!")
 
     def update_extension(self, **kwargs) -> None:
+        # TODO: consider warning the user if klipper is running, as update might affect ongoing prints
+        
         extension_installed = check_file_exist(TMCA_DIR)
         if not extension_installed:
             Logger.print_info("Extension does not seem to be installed! Skipping ...")
@@ -172,7 +174,7 @@ class TmcAutotuneExtension(BaseExtension):
 
         Logger.print_status("Updating Klipper TMC Autotune...")
         try:
-            # TODO: manage backup of config files if changed upstream
+            # TODO: decide on backup strategy here
             # Option 1:
             # settings = KiauhSettings()
             # if settings.kiauh.backup_before_update:
