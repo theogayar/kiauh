@@ -288,7 +288,7 @@ class TmcAutotuneExtension(BaseExtension):
         for instance in kl_instances:
             svc.backup_file(
                 source_path=instance.cfg_file,
-                target_path=f"{instance.data_dir.name}/printer.cfg_{timestamp}",
+                target_path=f"{instance.data_dir.name}/printer-{timestamp}.cfg",
                 target_name=instance.cfg_file.name,
             )
 
