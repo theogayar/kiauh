@@ -156,7 +156,7 @@ def format_question(question: str, default=None) -> str:
     if default is not None:
         formatted_q += f" (default={default})"
 
-    return Color.apply(f"###### {formatted_q}: ", Color.CYAN)
+    return str(Color.apply(f"###### {formatted_q}: ", Color.CYAN))
 
 
 def validate_number_input(value: str, min_count: int, max_count: int | None) -> int:

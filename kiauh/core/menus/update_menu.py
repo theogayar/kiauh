@@ -257,7 +257,7 @@ class UpdateMenu(BaseMenu):
 
     def _format_local_status(self, local_version, remote_version) -> str:
         color = Color.RED
-        if not local_version or local_version == '-':
+        if local_version is None:
             color = Color.RED
         elif local_version == remote_version:
             color = Color.GREEN
@@ -290,7 +290,13 @@ class UpdateMenu(BaseMenu):
         return self.status_data[name]["installed"]
 
     def _is_update_available(self, name: str) -> bool:
-        return self.status_data[name]["local"] != self.status_data[name]["remote"]
+        local = self.status_data[name]["local"]
+        remote = self.status_data[name]["remote"]
+
+        if local is None or remote is None:
+            return False
+
+        return local != remote
 
     def _run_update_routine(self, name: str, update_fn: Callable, *args) -> None:
         display_name = self.status_data[name]["display_name"]

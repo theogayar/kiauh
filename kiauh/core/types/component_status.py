@@ -26,7 +26,7 @@ class ComponentStatus:
     owner: str | None = None
     repo: str | None = None
     repo_url: str | None = None
-    branch: str = ""
+    branch: str | None = None
     local: str | None = None
     remote: str | None = None
     instances: int | None = None

@@ -95,8 +95,8 @@ class MainMenu(BaseMenu):
         status_data: ComponentStatus = status_fn(*args)
         code: int = status_data.status
         status: StatusText = StatusMap[code]
-        owner: str = trunc_string(status_data.owner, 23)
-        repo: str = trunc_string(status_data.repo, 23)
+        owner: str = trunc_string(status_data.owner, 23) if status_data.owner else '-'
+        repo: str = trunc_string(status_data.repo, 23) if status_data.repo else '-'
         instance_count: int = status_data.instances
 
         count_txt: str = ""
