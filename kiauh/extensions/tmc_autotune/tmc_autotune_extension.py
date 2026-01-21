@@ -120,11 +120,12 @@ class TmcAutotuneExtension(BaseExtension):
             )
 
             # TODO: confirm placement of this interaction
-            if get_confirm(
-                question="Create an example autotune_tmc.cfg in each printer config directory?",
+            create_config = get_confirm(
+                question="Create an example autotune_tmc.cfg for each instance?",
                 default_choice=True,
                 allow_go_back=False,
-            ):
+            )
+            if create_config:
                 self.install_example_cfg(kl_instances)
             else:
                 Logger.print_info(
@@ -161,6 +162,23 @@ class TmcAutotuneExtension(BaseExtension):
         # Restart klipper after installation
         if kl_instances:
             InstanceManager.start_all(kl_instances)
+
+        if create_config:
+            Logger.print_dialog(
+                DialogType.ATTENTION,
+                [
+                    "During the installation of Klipper TMC Autotune, "
+                    "a basic config was created per instance. You need to edit the config"
+                    "file in order to enable the extension for your specific instances. "
+                    "Please refer to the official documentation page for further information:",
+                    f"{TMCA_REPO}",
+                    "",
+                    "Also note that you should create your [autotune_tmc stepper_xyz] sections"
+                    "only in the autotune_tmc.cfg files and NOT in the printer.cfg files directly,",
+                    "contrary to what is advised in the official documentation.",
+                ],
+                margin_bottom=1,
+            )
 
         Logger.print_ok("Klipper TMC Autotune installed successfully!")
 
@@ -257,12 +275,15 @@ class TmcAutotuneExtension(BaseExtension):
             BackupService().backup_printer_cfg()
             remove_config_section("include autotune_tmc.cfg", kl_instances)
 
-            Logger.print_warn("PLEASE NOTE:")
-            Logger.print_warn(
-                "1. You may have to modify your printer.cfg file(s) manually if you have steppers using exotic configs"
-            )
-            Logger.print_warn(
-                "2. Removal of the tmc_autotune.cfg file is NOT performed automatically."
+            Logger.print_dialog(
+                DialogType.ATTENTION,
+                [
+                    "You may have to modify your printer.cfg files(s) manually, "
+                    "if you have steppers using exotic configs.",
+                    ""
+                    "Please also note that removal of autotune_tmc.cfg is not performed automatically. ",
+                ],
+                margin_bottom=1,
             )
 
         except Exception as e:
