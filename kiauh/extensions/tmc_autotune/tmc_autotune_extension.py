@@ -22,7 +22,7 @@ from extensions.tmc_autotune import (
     KLIPPER_DIR,
     KLIPPER_EXTRAS,
     TMCA_DIR,
-    TMCA_EXEMPLE_CONFIG,
+    TMCA_EXAMPLE_CONFIG,
     TMCA_MOONRAKER_UPDATER_NAME,
     TMCA_REPO,
 )

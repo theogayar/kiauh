@@ -18,7 +18,7 @@ KLIPPER_EXTRAS = KLIPPER_DIR.joinpath("klippy/extras")
 TMCA_DIR = Path.home().joinpath("klipper_tmc_autotune")
 
 # files
-TMCA_EXEMPLE_CONFIG = TMCA_DIR.joinpath("docs/example.cfg")
+TMCA_EXAMPLE_CONFIG = TMCA_DIR.joinpath("docs/example.cfg")
 
 # names
 TMCA_MOONRAKER_UPDATER_NAME = "update_manager klipper_tmc_autotune"
