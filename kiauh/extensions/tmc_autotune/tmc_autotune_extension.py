@@ -172,7 +172,15 @@ class TmcAutotuneExtension(BaseExtension):
             Logger.print_info("Extension does not seem to be installed! Skipping ...")
             return
 
+        # Interactively ask for parameters before proceeding to enhance user experience on slow systems
+        backup_before_update = get_confirm(
+            question="Backup Klipper TMC Autotune directory before update?",
+            default_choice=True,
+            allow_go_back=True,
+        )
+
         kl_instances = get_instances(Klipper)
+
         if not self._stop_klipper_instances_interactively(
             kl_instances, "update of TMC Autotune"
         ):
@@ -180,11 +188,7 @@ class TmcAutotuneExtension(BaseExtension):
 
         Logger.print_status("Updating Klipper TMC Autotune...")
         try:
-            if get_confirm(
-                question="Backup Klipper TMC Autotune directory before update?",
-                default_choice=True,
-                allow_go_back=True,
-            ):
+            if backup_before_update:
                 Logger.print_status("Backing up Klipper TMC Autotune directory...")
                 svc = BackupService()
                 svc.backup_directory(
@@ -217,6 +221,7 @@ class TmcAutotuneExtension(BaseExtension):
 
         kl_instances = get_instances(Klipper)
 
+        # Interactively ask for parameters before proceeding to enhance user experience on slow systems
         if not self._stop_klipper_instances_interactively(
             kl_instances, "removal of TMC Autotune"
         ):
