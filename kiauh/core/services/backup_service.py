@@ -68,9 +68,10 @@ class BackupService:
                 backup_dir = self._backup_root.joinpath(target_path)
 
             backup_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_path, backup_dir.joinpath(filename))
+            destination_path = backup_dir.joinpath(filename)
+            shutil.copy2(source_path, destination_path)
 
-            Logger.print_ok(f"Successfully backed up '{source_path}' to '{backup_dir}'")
+            Logger.print_ok(f"Successfully backed up '{source_path}' to '{destination_path}'")
             return True
 
         except Exception as e:
