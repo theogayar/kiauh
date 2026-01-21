@@ -61,6 +61,7 @@ class TmcAutotuneExtension(BaseExtension):
             and check_file_exist(KLIPPER_EXTRAS.joinpath("motor_database.cfg"))
         )
 
+        # Interactively ask for parameters before proceeding to enhance user experience on slow systems
         overwrite = True
         if tmca_exists:
             overwrite = get_confirm(
@@ -72,6 +73,18 @@ class TmcAutotuneExtension(BaseExtension):
         if not overwrite:
             Logger.print_warn("Installation aborted due to user request.")
             return
+
+        add_moonraker_update_section = get_confirm(
+            question="Add Klipper TMC Autotune to Moonraker update manager(s)?",
+            default_choice=True,
+            allow_go_back=False,
+        )
+
+        create_example_config = get_confirm(
+            question="Create an example autotune_tmc.cfg for each instance?",
+            default_choice=True,
+            allow_go_back=False,
+        )
 
         kl_instances = get_instances(Klipper)
 
@@ -102,13 +115,7 @@ class TmcAutotuneExtension(BaseExtension):
                 "Symlinks created successfully for all instances.", end="\n\n"
             )
 
-            # TODO: confirm placement of this interaction
-            create_config = get_confirm(
-                question="Create an example autotune_tmc.cfg for each instance?",
-                default_choice=True,
-                allow_go_back=False,
-            )
-            if create_config:
+            if create_example_config:
                 self._install_example_cfg(kl_instances)
             else:
                 Logger.print_info(
@@ -118,12 +125,7 @@ class TmcAutotuneExtension(BaseExtension):
                     "Make sure to create and include an autotune_tmc.cfg in your printer.cfg in order to use the extension!"
                 )
 
-            # TODO: confirm placement of this interaction
-            if get_confirm(
-                question="Add Klipper TMC Autotune to Moonraker update manager(s)?",
-                default_choice=True,
-                allow_go_back=False,
-            ):
+            if add_moonraker_update_section:
                 mr_instances = get_instances(Moonraker)
                 self._add_moonraker_update_manager_section(mr_instances)
             else:
@@ -146,7 +148,7 @@ class TmcAutotuneExtension(BaseExtension):
         if kl_instances:
             InstanceManager.start_all(kl_instances)
 
-        if create_config:
+        if create_example_config:
             Logger.print_dialog(
                 DialogType.ATTENTION,
                 [
@@ -396,7 +398,5 @@ class TmcAutotuneExtension(BaseExtension):
 # TODO: add a PR to improve the include adder so that it adds the section at a more appropriate place (e.g. at the top.)
 # TODO: add a PR to move the instance stopper and restart to instance utils
 
-# TODO: fix the backup service so that the file name is proper
 # TODO: let the git wrapper handle the prompt for overwriting local changes
-# TODO: fix the warning dialogs formatting
 # TODO: put the interactivity at the top of the installers/updater/remover functions
