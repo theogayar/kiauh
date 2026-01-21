@@ -70,9 +70,7 @@ class BackupService:
             backup_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_path, backup_dir.joinpath(filename))
 
-            Logger.print_ok(
-                f"Successfully backed up '{source_path}' to '{backup_dir}'"
-            )
+            Logger.print_ok(f"Successfully backed up '{source_path}' to '{backup_dir}'")
             return True
 
         except Exception as e:
@@ -134,27 +132,27 @@ class BackupService:
     ################################################
 
     def backup_printer_cfg(self):
+        """Backup printer.cfg files of all Klipper instances.
+        Files are backed up to:
+        <backup_root>/<instance_data_dir_name>/printer_<timestamp>.cfg"""
         klipper_instances: List[Klipper] = get_instances(Klipper)
         for instance in klipper_instances:
-            target_path: Path = self._backup_root.joinpath(
-                instance.data_dir.name, f"config_{self.timestamp}"
-            )
+            target_path: Path = self._backup_root.joinpath(instance.data_dir.name)
             self.backup_file(
                 source_path=instance.cfg_file,
                 target_path=target_path,
-                target_name=instance.cfg_file.name,
             )
 
     def backup_moonraker_conf(self):
+        """Backup moonraker.conf files of all Moonraker instances.
+        Files are backed up to:
+        <backup_root>/<instance_data_dir_name>/moonraker_<timestamp>.conf"""
         moonraker_instances: List[Moonraker] = get_instances(Moonraker)
         for instance in moonraker_instances:
-            target_path: Path = self._backup_root.joinpath(
-                instance.data_dir.name, f"config_{self.timestamp}"
-            )
+            target_path: Path = self._backup_root.joinpath(instance.data_dir.name)
             self.backup_file(
                 source_path=instance.cfg_file,
                 target_path=target_path,
-                target_name=instance.cfg_file.name,
             )
 
     def backup_printer_config_dir(self) -> None:
