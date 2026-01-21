@@ -188,10 +188,9 @@ class TmcAutotuneExtension(BaseExtension):
             ):
                 Logger.print_status("Backing up Klipper TMC Autotune directory...")
                 svc = BackupService()
-                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
                 svc.backup_directory(
                     source_path=TMCA_DIR,
-                    backup_name=f"klipper_tmc_autotune_{timestamp}",
+                    backup_name="klipper_tmc_autotune",
                 )
                 Logger.print_ok("Backup completed successfully.")
 
