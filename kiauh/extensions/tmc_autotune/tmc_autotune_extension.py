@@ -232,7 +232,7 @@ class TmcAutotuneExtension(BaseExtension):
             # Remove from moonraker update manager if moonraker is installed
             mr_instances: List[Moonraker] = get_instances(Moonraker)
             if mr_instances:
-                Logger.print_status(
+                Logger.print_info(
                     "Removing Klipper TMC Autotune from update manager ..."
                 )
                 BackupService().backup_moonraker_conf()
@@ -244,7 +244,7 @@ class TmcAutotuneExtension(BaseExtension):
                 )
 
             # Remove include from printer.cfg files, backing them up first
-            Logger.print_status("Removing include from printer.cfg files ...")
+            Logger.print_info("Removing include from printer.cfg files ...")
             BackupService().backup_printer_cfg()
             remove_config_section("include autotune_tmc.cfg", kl_instances)
 
