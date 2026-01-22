@@ -402,3 +402,4 @@ class TmcAutotuneExtension(BaseExtension):
 # TODO: add a PR for a defined test environment / apt check ? > currenltly being worked on
 # TODO: add a PR to improve the include adder so that it adds the section at a more appropriate place (e.g. at the top.) > detect include section placement
 # TODO: add a PR to move the instance stopper and restart to instance utils
+# TODO: restart moonraker after modifying moonraker.conf (fails on removal of extension)
