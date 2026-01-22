@@ -71,7 +71,9 @@ class BackupService:
             destination_path = backup_dir.joinpath(filename)
             shutil.copy2(source_path, destination_path)
 
-            Logger.print_ok(f"Successfully backed up '{source_path}' to '{destination_path}'")
+            Logger.print_ok(
+                f"Successfully backed up '{source_path}' to '{destination_path}'"
+            )
             return True
 
         except Exception as e:
@@ -135,7 +137,8 @@ class BackupService:
     def backup_printer_cfg(self):
         """Backup printer.cfg files of all Klipper instances.
         Files are backed up to:
-        <backup_root>/<instance_data_dir_name>/printer_<timestamp>.cfg"""
+        {backup_root}/{instance_data_dir_name}/printer_{timestamp}.cfg
+        """
         klipper_instances: List[Klipper] = get_instances(Klipper)
         for instance in klipper_instances:
             target_path: Path = self._backup_root.joinpath(instance.data_dir.name)
@@ -147,7 +150,8 @@ class BackupService:
     def backup_moonraker_conf(self):
         """Backup moonraker.conf files of all Moonraker instances.
         Files are backed up to:
-        <backup_root>/<instance_data_dir_name>/moonraker_<timestamp>.conf"""
+        {backup_root}/{instance_data_dir_name}/moonraker_{timestamp}.conf
+        """
         moonraker_instances: List[Moonraker] = get_instances(Moonraker)
         for instance in moonraker_instances:
             target_path: Path = self._backup_root.joinpath(instance.data_dir.name)
